@@ -1,55 +1,135 @@
-import React from "react";
-import logo from "./logo.svg";
-import "./App.css";
+import React, { useState } from 'react';
+import './App.css';
 
-/**
- * Uses Tailwind CSS for styling
- * Tailwind file is imported in App.css
- */
+function App() {
+    const [tasks, setTasks] = useState([]);
+    const [taskInput, setTaskInput] = useState('');
+    const [editTaskId, setEditTaskId] = useState(null);
+    const [editTaskText, setEditTaskText] = useState('');
 
-export default function App() {
-  return (
-    <div className="app min-h-screen text-blue-200 flex items-center flex-col p-20">
-      <div className="mb-10 grid grid-cols-4 grid-rows-2 w-1/2 mx-auto">
-        <img className="opacity-25" src={logo} alt="React Logo" width="300" />
-        <img
-          className="col-span-2 row-span-3 animate-spin m-auto"
-          style={{ animationDuration: "30s" }}
-          src={logo}
-          alt="React Logo"
-          width="300"
-        />
-        <img className="opacity-25" src={logo} alt="React Logo" width="300" />
-        <img className="opacity-25" src={logo} alt="React Logo" width="300" />
-        <img className="opacity-25" src={logo} alt="React Logo" width="300" />
-      </div>
+    const addTask = (e) => {
+        e.preventDefault();
+        if (taskInput.trim() === '') return;
+        setTasks([...tasks, { id: Date.now(), text: taskInput, completed: false }]);
+        setTaskInput('');
+    };
 
-      <h1 className="text-2xl lg:text-5xl mb-10 text-right">
-        Welcome to Your New React App{" "}
-        <span className="block text-lg text-blue-400">on DigitalOcean</span>
-      </h1>
+    const toggleTask = (id) => {
+        setTasks(tasks.map(task =>
+            task.id === id ? { ...task, completed: !task.completed } : task
+        ));
+    };
 
-      <div className="grid grid-cols-2 grid-rows-2 gap-4">
-        <Button
-          text="DigitalOcean Docs"
-          url="https://www.digitalocean.com/docs/app-platform"
-        />
-        <Button
-          text="DigitalOcean Dashboard"
-          url="https://cloud.digitalocean.com/apps"
-        />
-      </div>
-    </div>
-  );
+    const deleteTask = (id) => {
+        setTasks(tasks.filter(task => task.id !== id));
+    };
+
+    const startEdit = (id, text) => {
+        setEditTaskId(id);
+        setEditTaskText(text);
+    };
+
+    const saveEdit = (e) => {
+        e.preventDefault();
+        if (editTaskText.trim() === '') return;
+        setTasks(tasks.map(task =>
+            task.id === editTaskId ? { ...task, text: editTaskText } : task
+        ));
+        setEditTaskId(null);
+        setEditTaskText('');
+    };
+
+    const cancelEdit = () => {
+        setEditTaskId(null);
+        setEditTaskText('');
+    };
+
+    return (
+        <div className="app-container">
+            <h1 className="app-title">Work Management</h1>
+            
+            <div className="task-form-container">
+                <form onSubmit={addTask} className="task-form">
+                    <input
+                        type="text"
+                        value={taskInput}
+                        onChange={(e) => setTaskInput(e.target.value)}
+                        placeholder="Add new task"
+                        className="task-input"
+                    />
+                    <button
+                        type="submit"
+                        className="add-button"
+                    >
+                        Add
+                    </button>
+                </form>
+            </div>
+
+            <div className="task-list-container">
+                {tasks.length === 0 ? (
+                    <p className="no-tasks">No tasks yet</p>
+                ) : (
+                    <ul className="task-list">
+                        {tasks.map(task => (
+                            <li
+                                key={task.id}
+                                className="task-item"
+                            >
+                                {editTaskId === task.id ? (
+                                    <form onSubmit={saveEdit} className="edit-form">
+                                        <input
+                                            type="text"
+                                            value={editTaskText}
+                                            onChange={(e) => setEditTaskText(e.target.value)}
+                                            className="edit-input"
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="save-button"
+                                        >
+                                            Save
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={cancelEdit}
+                                            className="cancel-button"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </form>
+                                ) : (
+                                    <div className="task-content">
+                                        <input
+                                            type="checkbox"
+                                            checked={task.completed}
+                                            onChange={() => toggleTask(task.id)}
+                                            className="task-checkbox"
+                                        />
+                                        <span className={task.completed ? 'task-text completed' : 'task-text'}>
+                                            {task.text}
+                                        </span>
+                                        <button
+                                            onClick={() => startEdit(task.id, task.text)}
+                                            className="edit-button"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => deleteTask(task.id)}
+                                    className="delete-button"
+                                >
+                                    Delete
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </div>
+    );
 }
 
-function Button({ className, text, url = "#" }) {
-  return (
-    <a
-      href={url}
-      className={`${className} py-3 px-6 bg-purple-400 hover:bg-purple-300 text-purple-800 hover:text-purple-900 block rounded text-center shadow flex items-center justify-center leading-snug text-xs transition ease-in duration-150`}
-    >
-      {text}
-    </a>
-  );
-}
+export default App;
